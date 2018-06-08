@@ -5,8 +5,9 @@ spring:
     password: "Your_password123"
 
 example:
+  use-shared-incrementer: false
   create-database: true
-  stress-test-thread-count: 10
-  samples-per-thread: 1000
+  stress-test-thread-count: 4
+  samples-per-thread: 100
     
 

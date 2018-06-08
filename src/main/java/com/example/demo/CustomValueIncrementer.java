@@ -2,7 +2,9 @@ package com.example.demo;
 
 import javax.sql.DataSource;
 
-public class CustomValueIncrementer extends  AbstractIdentityColumnMaxValueIncrementer {
+import org.springframework.jdbc.support.incrementer.SqlServerMaxValueIncrementer;
+
+public class CustomValueIncrementer extends  SqlServerMaxValueIncrementer {
 
 	/**
 	 * Default constructor for bean property style usage.
@@ -33,5 +35,4 @@ public class CustomValueIncrementer extends  AbstractIdentityColumnMaxValueIncre
 	protected String getIdentityStatement() {
 		return "select @@identity";
 	}
-
 }

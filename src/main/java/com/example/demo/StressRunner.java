@@ -42,12 +42,12 @@ public class StressRunner implements CommandLineRunner {
 		@Override
 		public void run() {
 			for (int index=0; index < sampleCount; index++) {
-				logger.info("Got Value : {}", incrementMeDao.getNextValue()); 
-//				try {
-//					Thread.sleep(new Random().nextInt(10));
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
+			
+				try {
+					logger.info("Got Value : {}", incrementMeDao.getNextValue()); 
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}			
 		}
 	}
