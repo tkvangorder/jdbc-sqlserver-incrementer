@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost;selectMethod=direct;sendStringParametersAsUnicode=false
+    username: SA
+    password: "Your_password123"
+
+example:
+  create-database: true
+  stress-test-thread-count: 10
+  samples-per-thread: 1000
+    
+
