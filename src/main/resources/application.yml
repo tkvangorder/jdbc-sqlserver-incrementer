@@ -5,9 +5,24 @@ spring:
     password: "Your_password123"
 
 example:
-  use-shared-incrementer: false
+  # Use the default SQLServer incrementer, this will work in a single application instance because the getNextKey() method is synchronized.
+  #incrementStrategy: DEFAULT_SHARED,
+
+  # Use the default SQLServer incrementer, but return a new instance each time, this will fail with deadlock issues.
+  incrementStrategy: DEFAULT_NOT_SHARED
+
+  # This incrementer runs the delete in a nested transaction, but requires the platform transaction manager to be injected into it.
+  #incrementStrategy: NESTED_TRANSACTION_ON_DELETE
+
+  # This incrementer keeps track of a reaper interval (relative to the current time), if getNextKey is called and the current time exceeds
+  # the last recorded reaping interval, a separate thread will be spun up for delete. Since this is in a different thread, it will
+  # run in a separate transaction. This strategy will leave a small number of records in the increment table.
+  #incrementStrategy: PASSIVE_REAPER
+
+  # This incrementer just uses the a sequence instead of the table strategy. This will work with any SQL SERVER version greater than 2012
+  #incrementStrategy: SEQUENCE
+  
   create-database: true
   stress-test-thread-count: 4
-  samples-per-thread: 100
-    
+  samples-per-thread: 1000
 

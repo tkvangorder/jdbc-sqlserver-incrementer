@@ -34,11 +34,22 @@ one thread at a time can get into this method.
 
 ## Notes:
 
-- ExampleDatabaseInitializer is used to create the sequence table on startup, see "src/main/resources/com/example/demo/example-sqlserver.sql"
-- "src/main/resources/application.yml" has configuration settings that can be tweaked (number of threads, number of samples per thread, and most importantly a flag to switch the incremeneter strategy from shared to non-shared.)
-- if you set "use-shared-incrementer to "true" and run the application, it will complete successfully because of the synchronization around "getNextKey()". However, if you run two instances of the application at the same time, you will encounter the deadlocking issue.
-- if you set "use-shared-incrementer to "false", you will encounter the deadlock almost immediately.
+- ExampleDatabaseInitializer is used to create the sequence table (and a real sequence) on startup, see "src/main/resources/com/example/demo/example-sqlserver.sql"
+- "src/main/resources/application.yml" has configuration settings that can be tweaked (number of threads, number of samples per thread, and which increment strategy to use.)
+- The meat of this project's logic is found in the IncrementMeDaoImpl and each of the "incrementer" variants.
 
-## Next Steps
+## Strategies
+I have created a couple of variants of the table incrementer (and one that uses a sequence) to address the deadlocking issue. The strategy used by this project can be set in the application.yml file.
 
-- I think we can come up with a better strategy around the delete call, such that multiple clients will not step on each other...
+### DEFAULT_SHARED
+Use the default SQLServer incrementer, this will work in a single application instance because the getNextKey() method is synchronized.
+### DEFAULT_NOT_SHARED
+Use the default SQLServer incrementer, but return a new instance each time, this will fail with deadlock issues.
+### NESTED_TRANSACTION_ON_DELETE
+This incrementer runs the delete in a nested transaction, but requires the platform transaction manager to be injected into it. This works nicely, but might require more coding changes to support.
+
+### PASSIVE_REAPER
+This incrementer keeps track of a reaper interval (relative to the current time), if getNextKey is called and the current time exceeds the last recorded reaping interval, a separate thread will be spun up for delete. Since this is in a different thread, it will run in a separate transaction. This strategy will leave a small number of records in the increment table. I've intentionally not used a task executor so that we do not have to inject it into the incrementer. 
+
+### SEQUENCE
+This incrementer just uses the a sequence instead of the table strategy. This will work with any SQL SERVER version greater than 2012 and is really the preferred approach. Not sure if Spring can just deprecate the use of SQL SERVER older than 2012.....which might be reasonable, seeing as how SQL SERVER 2008 is 10 years old.

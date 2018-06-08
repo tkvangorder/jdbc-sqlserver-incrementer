@@ -2,24 +2,29 @@ package com.example.demo;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 import org.springframework.jdbc.support.incrementer.SqlServerMaxValueIncrementer;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@ConfigurationProperties("example")
 public class IncrementMeDaoImpl implements IncrementMeDao {
 
 	private final DataSource dataSource;
+
+	//Only used with Nested transaction stategy.
+	private final PlatformTransactionManager transactionManager;
+
 	private DataFieldMaxValueIncrementer incrementer;
+	private IncrementStrategy incrementStrategy = IncrementStrategy.DEFAULT_NOT_SHARED;
 	
-	@Value("${example.use-shared-incrementer:false}")
-	private boolean useSharedIncrementer = false;
-	
-	public IncrementMeDaoImpl(DataSource dataSource) {
+	public IncrementMeDaoImpl(DataSource dataSource, PlatformTransactionManager transactionManager) {
 		this.dataSource = dataSource;
+		this.transactionManager = transactionManager;
 	}
 
 	// Pre-condition to get the deadlock error:
@@ -35,12 +40,31 @@ public class IncrementMeDaoImpl implements IncrementMeDao {
 
 	private DataFieldMaxValueIncrementer getIncrementer() {
 	
-		if (useSharedIncrementer && incrementer != null) {
+		if (incrementStrategy != IncrementStrategy.DEFAULT_NOT_SHARED && incrementer != null) {
 			return incrementer;
 		}
-		incrementer = new SqlServerMaxValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");
-		//incrementer = new CustomValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");	
+
+		switch (incrementStrategy) {
+			case DEFAULT_NOT_SHARED :
+			case DEFAULT_SHARED:
+				incrementer = new SqlServerMaxValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");
+				break;			
+			case NESTED_TRANSACTION_ON_DELETE :
+				incrementer = new NestedTransactionOnDeleteValueIncrementer(dataSource, "EXAMPLE_SEQ", "id", transactionManager);
+				break;							
+			case PASSIVE_REAPER :
+				incrementer = new PassiveReaperValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");
+				break;				
+			case SEQUENCE :
+				incrementer = new SequenceValueIncrementer(dataSource, "EXAMPLE_REAL_SEQUENCE");
+				break;
+		}
 		return incrementer;
 	}
+
+	public void setIncrementStrategy(IncrementStrategy incrementStrategy) {
+		this.incrementStrategy = incrementStrategy;
+	}
+
 	
 }
