@@ -53,10 +53,10 @@ public class IncrementMeDaoImpl implements IncrementMeDao {
 				incrementer = new NestedTransactionOnDeleteValueIncrementer(dataSource, "EXAMPLE_SEQ", "id", transactionManager);
 				break;							
 			case PASSIVE_REAPER :
-				incrementer = new PassiveReaperValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");
+				incrementer = new SqlServerMaxValueIncrementer(dataSource, "EXAMPLE_SEQ", "id");
 				break;				
 			case SEQUENCE :
-				incrementer = new SequenceValueIncrementer(dataSource, "EXAMPLE_REAL_SEQUENCE");
+				incrementer = new SqlServerSequenceMaxValueIncrementer(dataSource, "EXAMPLE_REAL_SEQUENCE");
 				break;
 		}
 		return incrementer;

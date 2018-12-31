@@ -9,7 +9,7 @@ example:
   #incrementStrategy: DEFAULT_SHARED,
 
   # Use the default SQLServer incrementer, but return a new instance each time, this will fail with deadlock issues.
-  incrementStrategy: DEFAULT_NOT_SHARED
+  #incrementStrategy: DEFAULT_NOT_SHARED
 
   # This incrementer runs the delete in a nested transaction, but requires the platform transaction manager to be injected into it.
   #incrementStrategy: NESTED_TRANSACTION_ON_DELETE
@@ -20,7 +20,7 @@ example:
   #incrementStrategy: PASSIVE_REAPER
 
   # This incrementer just uses the a sequence instead of the table strategy. This will work with any SQL SERVER version greater than 2012
-  #incrementStrategy: SEQUENCE
+  incrementStrategy: SEQUENCE
   
   create-database: true
   stress-test-thread-count: 4
